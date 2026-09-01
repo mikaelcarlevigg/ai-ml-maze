@@ -62,14 +62,9 @@ def train(grid):
             new_pos = env.move(pos, env.ACTIONS[a], grid)
             reward = 0.0 if new_pos == goal else -1.0   # -1 per step = hurry up
 
-            # ==== THE LEARNING (your STEP 4): the Q-update ====
-            # Nudge this ONE number toward "the reward now + the best you can
-            # do from where you landed". Repeat this millions of times and the
-            # goal's value seeps backward through the whole maze.
             old = Q[pos[0]][pos[1]][a]
             best_future = max(Q[new_pos[0]][new_pos[1]])
             Q[pos[0]][pos[1]][a] = old + ALPHA * (reward + GAMMA * best_future - old)
-            # ==================================================
 
             pos = new_pos
             if pos == goal:
