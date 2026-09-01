@@ -33,9 +33,6 @@ staged.
    the BFS-optimal 44-step path (BFS = the shortest-path oracle we grade against). With state = the
    absolute cell, it memorizes, and transfers to nothing.
 
-   ![A solved maze with the agent's path from start to goal](images/maze-solved.png)
-   *`rung8.py`: tabular Q-learning settling on the BFS-optimal path.*
-
 2. **Change the state representation and the same learner generalizes.** Swap "which cell am I in"
    for local features (walls around me, direction to the goal) and it solves mazes it never trained
    on, but only on sparse grids. On dense mazes it collapses: the same local view means different
@@ -56,8 +53,8 @@ staged.
    learned ~82%. When the good strategy is writable, learning it from scratch just produces a noisier
    copy of something you could type directly.
 
-   ![Three agents race the same grid: random, hand-coded, learned](images/race.gif)
-   *`race.py`: random flails, the hand-coded rule beelines, the learned agent threads a fast path.*
+   ![Three agents race the same grid: random, hand-coded, learned](images/race.png)
+   *`race.py`: on this unseen grid random stays lost, hand-coded reaches the goal in 24 steps, the learned agent in 90.*
 
 7. **We were wrong about the hand-coded agent, and measured it.** We claimed it never re-treads. It
    does, about 27% of its steps (vs random's ~72%). Measured, not assumed.
@@ -76,8 +73,8 @@ staged.
     deaths. The learner, from the death penalty alone: 45/100, 1 death. Same two approaches, opposite
     winner. The only thing we changed was whether the rule was hidden.
 
-    ![Hand-coded walks into a lethal trap while the learned agent routes around it](images/trap-flip.gif)
-    *`rung11.py`: the hidden rule kills the hand-coded agent. The learner discovered it.*
+    ![Hand-coded walks into a lethal trap while the learned agent routes around it](images/trap-flip.png)
+    *`rung11.py`: the hand-coded agent dies on a trap at step 13. The learned agent, which discovered the hidden rule, reaches the goal in 17.*
 
 **What it all points to:** the deciding levers are whether *you* can write the rule, and
 *representation*, meaning what the agent can sense and remember. Learning earns its place only when
