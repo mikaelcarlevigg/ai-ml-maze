@@ -33,9 +33,6 @@ uppställt.
    hittade den BFS-optimala 44-stegsbanan (BFS = kortaste-väg-oraklet vi mäter mot). Med state =
    den absoluta cellen memorerar den, och överför till ingenting.
 
-   ![En löst labyrint med agentens bana från start till mål](images/maze-solved.png)
-   *`rung8.py`: tabulär Q-learning landar på den BFS-optimala banan.*
-
 2. **Byt state-representation så generaliserar samma lärare.** Byt "vilken cell är jag i" mot lokala
    särdrag (väggar runt mig, riktning mot målet) och den löser banor den aldrig tränat på, men bara
    på glesa banor. På täta banor kollapsar den: samma lokala vy betyder olika saker på olika ställen
@@ -55,8 +52,8 @@ uppställt.
    91%, lärd ~82%. När den bra strategin går att skriva producerar inlärning från grunden bara en
    brusigare kopia av något du kunde ha skrivit direkt.
 
-   ![Tre agenter tävlar på samma bana: slump, handkodad, lärd](images/race.gif)
-   *`race.py`: slumpen flaxar, den handkodade tar sikte, den lärda trär en snabb bana.*
+   ![Tre agenter tävlar på samma bana: slump, handkodad, lärd](images/race.png)
+   *`race.py`: på denna osedda bana når slumpen aldrig målet, den handkodade tar sig dit på 24 steg, den lärda på 90.*
 
 7. **Vi hade fel om den handkodade agenten, och mätte det.** Vi påstod att den aldrig trampar om.
    Det gör den, ~27% av sina steg (mot slumpens ~72%). Mätt, inte antaget.
@@ -75,8 +72,8 @@ uppställt.
     lösta, 85 dödsfall. Den lärda, enbart från döds-straffet: 45/100, 1 dödsfall. Samma två
     ansatser, motsatt vinnare. Det enda vi ändrade var om regeln var dold.
 
-    ![Handkodad går in i en dödlig fälla medan den lärda väjer runt](images/trap-flip.gif)
-    *`rung11.py`: den dolda regeln dödar den handkodade agenten. Den lärda upptäckte den.*
+    ![Handkodad går in i en dödlig fälla medan den lärda väjer runt](images/trap-flip.png)
+    *`rung11.py`: den handkodade dör på en fälla vid steg 13. Den lärda, som upptäckt den dolda regeln, når målet på 17 steg.*
 
 **Vad allt pekar mot:** de avgörande spakarna är om *du* kan skriva regeln, och *representation*,
 alltså vad agenten kan känna av och minnas. Lärandet förtjänar sin plats bara när regeln inte går
