@@ -4,3 +4,5 @@ agent.json
 agent_trap.json
 last_seed.txt
 last_seed_trap.txt
+.agent_hmac_key
+*.json.hmac

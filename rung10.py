@@ -11,6 +11,8 @@
 
 import os
 import json
+import hmac
+import hashlib
 import random
 import time
 import mazelab as env
@@ -96,36 +98,65 @@ def solve_rate(Q, seeds):
     return solved / len(seeds)
 
 
-# AGENT_FILE = os.path.join(os.path.dirname(__file__), "agent.pkl")
-
-
-# def save_agent(Q):
-#     with open(AGENT_FILE, "wb") as f:
-#         pickle.dump(Q, f)
-# 
-
-# def load_agent():
-#     if os.path.exists(AGENT_FILE):
-#         with open(AGENT_FILE, "rb") as f:
-#             return pickle.load(f)
-#     return None
 AGENT_FILE = os.path.join(os.path.dirname(__file__), "agent.json")
+AGENT_HMAC_FILE = AGENT_FILE + ".hmac"
+AGENT_HMAC_KEY_FILE = os.path.join(os.path.dirname(__file__), ".agent_hmac_key")
+
+# NOTE: the HMAC key lives in the same directory, same user, same trust
+# boundary as the data it protects. Anyone able to tamper with agent.json
+# can also read this key and produce a valid signature for their tampered
+# file. This control guards against accidental corruption (partial writes,
+# disk errors), not a determined attacker with local write access. It only
+# becomes a real integrity boundary once the file is produced somewhere the
+# attacker cannot reach (a separate training pipeline holding the key, or
+# asymmetric signing with a private key that never leaves that system).
+
+
+def _get_hmac_key():
+    if os.path.exists(AGENT_HMAC_KEY_FILE):
+        with open(AGENT_HMAC_KEY_FILE, "rb") as f:
+            return f.read()
+    key = os.urandom(32)
+    with open(AGENT_HMAC_KEY_FILE, "wb") as f:
+        f.write(key)
+    return key
+
+
+def _compute_hmac(data: bytes) -> str:
+    key = _get_hmac_key()
+    return hmac.new(key, data, hashlib.sha256).hexdigest()
 
 
 def save_agent(Q):
     # JSON-nycklar måste vara strängar, så vi kodar tupel-tillstånd
     # som kommaseparerade strängar: (0, 1, -1) -> "0,1,-1"
     serializable = {",".join(map(str, state)): values for state, values in Q.items()}
-    with open(AGENT_FILE, "w") as f:
-        json.dump(serializable, f)
+    data = json.dumps(serializable).encode("utf-8")
+    with open(AGENT_FILE, "wb") as f:
+        f.write(data)
+    digest = _compute_hmac(data)
+    with open(AGENT_HMAC_FILE, "w") as f:
+        f.write(digest)
 
 
 def load_agent():
     if not os.path.exists(AGENT_FILE):
         return None
 
-    with open(AGENT_FILE) as f:
-        raw = json.load(f)
+    with open(AGENT_FILE, "rb") as f:
+        data = f.read()
+
+    if not os.path.exists(AGENT_HMAC_FILE):
+        raise ValueError(f"Saknar integritetsfil för {AGENT_FILE}, vägrar ladda overifierat agent-state")
+
+    with open(AGENT_HMAC_FILE) as f:
+        expected = f.read().strip()
+
+    actual = _compute_hmac(data)
+    if not hmac.compare_digest(expected, actual):
+        raise ValueError(f"Integritetskontroll misslyckades för {AGENT_FILE}, filen kan vara korrupt eller manipulerad")
+
+    raw = json.loads(data.decode("utf-8"))
 
     Q = {}
     for key, values in raw.items():
@@ -137,6 +168,7 @@ def load_agent():
         Q[state] = [float(v) for v in values]
 
     return Q
+
 
 def train(Q=None):
     grids = [env.make_sparse(s, OBSTACLES) for s in range(TRAIN_GRIDS)]   # list of (grid, goal)
