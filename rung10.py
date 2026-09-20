@@ -10,7 +10,7 @@
 # learner. A net is only needed when the features get too rich for a table.)
 
 import os
-import pickle
+import json
 import random
 import time
 import mazelab as env
@@ -96,20 +96,47 @@ def solve_rate(Q, seeds):
     return solved / len(seeds)
 
 
-AGENT_FILE = os.path.join(os.path.dirname(__file__), "agent.pkl")
+# AGENT_FILE = os.path.join(os.path.dirname(__file__), "agent.pkl")
+
+
+# def save_agent(Q):
+#     with open(AGENT_FILE, "wb") as f:
+#         pickle.dump(Q, f)
+# 
+
+# def load_agent():
+#     if os.path.exists(AGENT_FILE):
+#         with open(AGENT_FILE, "rb") as f:
+#             return pickle.load(f)
+#     return None
+AGENT_FILE = os.path.join(os.path.dirname(__file__), "agent.json")
 
 
 def save_agent(Q):
-    with open(AGENT_FILE, "wb") as f:
-        pickle.dump(Q, f)
+    # JSON-nycklar måste vara strängar, så vi kodar tupel-tillstånd
+    # som kommaseparerade strängar: (0, 1, -1) -> "0,1,-1"
+    serializable = {",".join(map(str, state)): values for state, values in Q.items()}
+    with open(AGENT_FILE, "w") as f:
+        json.dump(serializable, f)
 
 
 def load_agent():
-    if os.path.exists(AGENT_FILE):
-        with open(AGENT_FILE, "rb") as f:
-            return pickle.load(f)
-    return None
+    if not os.path.exists(AGENT_FILE):
+        return None
 
+    with open(AGENT_FILE) as f:
+        raw = json.load(f)
+
+    Q = {}
+    for key, values in raw.items():
+        if not isinstance(values, list) or len(values) != 4:
+            raise ValueError(f"Trasig agent-fil: förväntade 4 Q-värden, fick {values!r}")
+        if not all(isinstance(v, (int, float)) for v in values):
+            raise ValueError(f"Trasig agent-fil: icke-numeriska Q-värden {values!r}")
+        state = tuple(int(x) for x in key.split(","))
+        Q[state] = [float(v) for v in values]
+
+    return Q
 
 def train(Q=None):
     grids = [env.make_sparse(s, OBSTACLES) for s in range(TRAIN_GRIDS)]   # list of (grid, goal)

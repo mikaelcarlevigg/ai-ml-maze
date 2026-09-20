@@ -10,7 +10,7 @@
 # grid: 0 open, 1 wall, 2 TRAP (walkable but lethal; its meaning is hidden)
 
 import os
-import pickle
+import json
 import random
 import sys
 import time
@@ -26,20 +26,33 @@ MAX_STEPS = 300
 GAMMA = 0.95
 TRAP_PENALTY = -50.0
 
-AGENT_FILE = os.path.join(os.path.dirname(__file__), "agent_trap.pkl")
+AGENT_FILE = os.path.join(os.path.dirname(__file__), "agent_trap.json")
 SEED_FILE = os.path.join(os.path.dirname(__file__), "last_seed_trap.txt")
 
 
 def save_agent(Q):
-    with open(AGENT_FILE, "wb") as f:
-        pickle.dump(Q, f)
+    serializable = {",".join(map(str, state)): values for state, values in Q.items()}
+    with open(AGENT_FILE, "w") as f:
+        json.dump(serializable, f)
 
 
 def load_agent():
-    if os.path.exists(AGENT_FILE):
-        with open(AGENT_FILE, "rb") as f:
-            return pickle.load(f)
-    return None
+    if not os.path.exists(AGENT_FILE):
+        return None
+
+    with open(AGENT_FILE) as f:
+        raw = json.load(f)
+
+    Q = {}
+    for key, values in raw.items():
+        if not isinstance(values, list) or len(values) != 4:
+            raise ValueError(f"Trasig agent-fil: förväntade 4 Q-värden, fick {values!r}")
+        if not all(isinstance(v, (int, float)) for v in values):
+            raise ValueError(f"Trasig agent-fil: icke-numeriska Q-värden {values!r}")
+        state = tuple(int(x) for x in key.split(","))
+        Q[state] = [float(v) for v in values]
+
+    return Q
 
 
 def save_seed(seed):
